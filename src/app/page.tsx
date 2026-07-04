@@ -479,11 +479,10 @@ export default function Home() {
               <a
                 key={link.label}
                 href={link.href}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  link.label === "Home"
-                    ? "bg-white text-[#1a1a1a] shadow-sm"
-                    : "text-muted hover:text-[#1a1a1a]"
-                }`}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${link.label === "Home"
+                  ? "bg-white text-[#1a1a1a] shadow-sm"
+                  : "text-muted hover:text-[#1a1a1a]"
+                  }`}
               >
                 {link.label}
               </a>
@@ -549,7 +548,7 @@ export default function Home() {
 
               <div className="relative z-10 flex h-full flex-col justify-center px-6 pb-24 sm:px-12">
                 <h1 className="max-w-2xl text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-                  Find Your Perfect Home or Sell with Confidence
+                  Find Your Super Perfect Home or Sell with Confidence
                 </h1>
                 <p className="mt-5 max-w-lg text-sm text-white/85 sm:text-base">
                   Explore a seamless way to buy, sell, and connect with trusted real estate professionals.
@@ -674,11 +673,10 @@ export default function Home() {
               <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTag === tag
-                    ? "bg-[#111111] text-white"
-                    : "border border-gray-200 text-muted hover:border-gray-300"
-                }`}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${activeTag === tag
+                  ? "bg-[#111111] text-white"
+                  : "border border-gray-200 text-muted hover:border-gray-300"
+                  }`}
               >
                 {tag}
               </button>
