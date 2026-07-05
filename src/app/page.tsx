@@ -228,37 +228,6 @@ function IconPlus({ className = "" }: { className?: string }) {
   );
 }
 
-function IconSocial({ name }: { name: "x" | "facebook" | "instagram" | "linkedin" }) {
-  const paths: Record<string, string> = {
-    x: "M4 4l16 16M20 4L4 20",
-    facebook: "M14 20v-7h2.5l.5-3H14V8.5c0-.9.3-1.5 1.6-1.5H17V4.2c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1V10H8v3h2.6v7z",
-    instagram: "",
-    linkedin: "",
-  };
-  if (name === "instagram") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4">
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  }
-  if (name === "linkedin") {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4">
-        <rect x="3" y="3" width="18" height="18" rx="3" />
-        <path d="M7.5 10v6M7.5 7.5v.01M11.5 16v-3.5c0-1.1.9-2 2-2s2 .9 2 2V16" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" className="h-4 w-4">
-      <path d={paths[name]} />
-    </svg>
-  );
-}
-
 /* ---------------------------------- Data ---------------------------------- */
 
 const navLinks = [
@@ -446,23 +415,51 @@ const blogPosts = [
   },
 ];
 
-const footerColumns = [
-  {
-    title: "Home",
-    links: ["Buy", "Rent", "Short Terms", "New Projects", "List your Property"],
-  },
-  {
-    title: "Services",
-    links: ["Property Management", "Get referrals", "Careers", "Real Estate News"],
-  },
-];
-
 /* ---------------------------------- Page ---------------------------------- */
+
+type EnquiryStatus = "idle" | "submitting" | "success" | "error";
+
+const initialEnquiry = {
+  name: "",
+  email: "",
+  phone: "",
+  interest: "Buying",
+  property: "Not sure / general enquiry",
+  message: "",
+};
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeTag, setActiveTag] = useState("Featured");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [enquiry, setEnquiry] = useState(initialEnquiry);
+  const [enquiryStatus, setEnquiryStatus] = useState<EnquiryStatus>("idle");
+  const [enquiryError, setEnquiryError] = useState("");
+
+  async function handleEnquirySubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setEnquiryStatus("submitting");
+    setEnquiryError("");
+
+    try {
+      const res = await fetch("/api/enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(enquiry),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+
+      setEnquiryStatus("success");
+      setEnquiry(initialEnquiry);
+    } catch (err) {
+      setEnquiryStatus("error");
+      setEnquiryError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-[#1a1a1a]">
@@ -553,6 +550,12 @@ export default function Home() {
                 <p className="mt-5 max-w-lg text-sm text-white/85 sm:text-base">
                   Explore a seamless way to buy, sell, and connect with trusted real estate professionals.
                 </p>
+                <a
+                  href="#contact"
+                  className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-[#1a1a1a] transition-colors hover:bg-white/90"
+                >
+                  Enquire Now
+                </a>
               </div>
             </div>
 
@@ -855,103 +858,143 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ---------------- Newsletter ---------------- */}
-        <section className="mx-auto max-w-7xl px-6 pb-24">
-          <div className="rounded-3xl bg-surface px-6 py-16 text-center sm:px-16">
-            <h2 className="text-2xl font-bold sm:text-3xl">Join Our Newsletter</h2>
-            <p className="mx-auto mt-3 max-w-md text-sm text-muted">
-              Join our newsletter for expert insights, market updates, and property opportunities you
-              won&apos;t want to miss.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <button className="w-full rounded-full border border-gray-300 px-6 py-3 text-sm font-medium transition-colors hover:border-gray-400 sm:w-auto">
-                Learn more
-              </button>
-              <button className="w-full rounded-full bg-[#111111] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2a2a2a] sm:w-auto">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* ---------------- Footer ---------------- */}
-      <footer id="contact" className="bg-[#111111] text-white">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        {/* ---------------- Enquiry form ---------------- */}
+        <section id="contact" className="mx-auto max-w-7xl px-6 py-24">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
             <div>
-              <a href="#" className="flex items-center gap-2 text-lg font-bold text-white">
-                <IconLeaf className="h-6 w-6 text-accent" />
-                Estate
-              </a>
-              <p className="mt-4 max-w-xs text-sm text-white/60">
-                Discover prestigious homes of luxury, comfort, and exclusivity in every detail.
+              <h2 className="text-2xl font-bold sm:text-3xl">Get in Touch</h2>
+              <p className="mt-3 max-w-md text-sm text-muted">
+                Tell us what you&apos;re looking for and a member of our team will get back to you
+                shortly.
               </p>
             </div>
 
-            {footerColumns.map((col) => (
-              <div key={col.title}>
-                <h4 className="font-semibold">{col.title}</h4>
-                <ul className="mt-4 flex flex-col gap-3 text-sm text-white/60">
-                  {col.links.map((l) => (
-                    <li key={l}>
-                      <a href="#" className="transition-colors hover:text-white">
-                        {l}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            <div>
-              <h4 className="font-semibold">Are You Finding home?</h4>
-              <form className="mt-4 flex overflow-hidden rounded-full bg-white/10">
-                <input
-                  type="email"
-                  placeholder="Enter Your Email"
-                  className="w-full bg-transparent px-4 py-2.5 text-sm outline-none placeholder:text-white/50"
-                />
-                <button
-                  type="submit"
-                  aria-label="Subscribe"
-                  className="flex items-center justify-center bg-white/20 px-4 text-white"
-                >
-                  <IconArrowUpRight className="h-4 w-4" />
-                </button>
-              </form>
-              <div className="mt-5 flex gap-3">
-                {(["x", "facebook", "instagram", "linkedin"] as const).map((name) => (
-                  <a
-                    key={name}
-                    href="#"
-                    aria-label={name}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+            <form onSubmit={handleEnquirySubmit} className="flex flex-col gap-4 rounded-3xl bg-surface p-6 sm:p-8">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="enquiry-name" className="block text-xs font-medium text-muted">
+                    Full name
+                  </label>
+                  <input
+                    id="enquiry-name"
+                    type="text"
+                    required
+                    value={enquiry.name}
+                    onChange={(e) => setEnquiry({ ...enquiry, name: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="enquiry-email" className="block text-xs font-medium text-muted">
+                    Email
+                  </label>
+                  <input
+                    id="enquiry-email"
+                    type="email"
+                    required
+                    value={enquiry.email}
+                    onChange={(e) => setEnquiry({ ...enquiry, email: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="enquiry-phone" className="block text-xs font-medium text-muted">
+                    Phone (optional)
+                  </label>
+                  <input
+                    id="enquiry-phone"
+                    type="tel"
+                    value={enquiry.phone}
+                    onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-accent"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="enquiry-interest" className="block text-xs font-medium text-muted">
+                    I&apos;m interested in
+                  </label>
+                  <select
+                    id="enquiry-interest"
+                    value={enquiry.interest}
+                    onChange={(e) => setEnquiry({ ...enquiry, interest: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-accent"
                   >
-                    <IconSocial name={name} />
-                  </a>
-                ))}
+                    <option>Buying</option>
+                    <option>Renting</option>
+                    <option>Selling</option>
+                    <option>General enquiry</option>
+                  </select>
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label htmlFor="enquiry-property" className="block text-xs font-medium text-muted">
+                  Property of interest
+                </label>
+                <select
+                  id="enquiry-property"
+                  value={enquiry.property}
+                  onChange={(e) => setEnquiry({ ...enquiry, property: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-accent"
+                >
+                  <option>Not sure / general enquiry</option>
+                  {listings.map((item) => (
+                    <option key={item.name}>{item.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="enquiry-message" className="block text-xs font-medium text-muted">
+                  Message
+                </label>
+                <textarea
+                  id="enquiry-message"
+                  required
+                  rows={4}
+                  value={enquiry.message}
+                  onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-accent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={enquiryStatus === "submitting"}
+                className="rounded-full bg-[#111111] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {enquiryStatus === "submitting" ? "Sending..." : "Send enquiry"}
+              </button>
+
+              {enquiryStatus === "success" && (
+                <p className="text-sm font-medium text-accent-dark">
+                  Thanks — your enquiry has been sent. We&apos;ll be in touch soon.
+                </p>
+              )}
+              {enquiryStatus === "error" && (
+                <p className="text-sm font-medium text-red-600">{enquiryError}</p>
+              )}
+            </form>
           </div>
+        </section>
+
+      </main>
+
+      {/* ---------------- Footer ---------------- */}
+      <footer className="bg-[#111111] text-white">
+        <div className="mx-auto max-w-7xl px-6 py-12">
+          <a href="#" className="flex items-center gap-2 text-lg font-bold text-white">
+            <IconLeaf className="h-6 w-6 text-accent" />
+            Estate
+          </a>
+          <p className="mt-4 max-w-md text-sm text-white/60">
+            Discover prestigious homes of luxury, comfort, and exclusivity in every detail.
+          </p>
         </div>
 
         <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mx-auto px-6 py-6 text-xs text-white/50">
             <p>© 2024 Estate</p>
-            <div className="flex flex-wrap gap-2">
-              <a href="#" className="hover:text-white">
-                Privacy Policy
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:text-white">
-                County Stamp
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:text-white">
-                Cookies Policy
-              </a>
-            </div>
           </div>
         </div>
       </footer>
